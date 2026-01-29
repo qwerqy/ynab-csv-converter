@@ -5,13 +5,44 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/qwerqy/ynab-csv-converter/internal/bank"
 )
 
 func main() {
-	// Input and output file paths
-	inputFile := "TransactionHistory.csv"
-	outputFile := "ynab_formatted.csv"
+	// Prompt for input file path (loop until file exists)
+	var inputFile string
+	for {
+		inputPrompt := &survey.Input{
+			Message: "Enter the input file path:",
+		}
+		if err := survey.AskOne(inputPrompt, &inputFile); err != nil {
+			fmt.Printf("Error reading input: %v\n", err)
+			return
+		}
+
+		if _, err := os.Stat(inputFile); err == nil {
+			break
+		}
+
+		fmt.Println("File not found. Please try again.")
+	}
+
+	// Prompt for output file path (optional, defaults to ynab_formatted.csv)
+	var outputFile string
+	outputPrompt := &survey.Input{
+		Message: "Enter the output file path:",
+		Default: "ynab_formatted.csv",
+	}
+	if err := survey.AskOne(outputPrompt, &outputFile); err != nil {
+		fmt.Printf("Error reading input: %v\n", err)
+		return
+	}
+
+	// Use default if output file is empty
+	if outputFile == "" {
+		outputFile = "ynab_formatted.csv"
+	}
 
 	b := bank.NewBank()
 
